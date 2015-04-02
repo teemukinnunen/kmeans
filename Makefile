@@ -44,7 +44,7 @@ OPTFLAGS    = -O -NDEBUG
 OPTFLAGS    = -g -pg
 INCFLAGS    = -I.
 CFLAGS      = $(OPTFLAGS) $(DFLAGS) $(INCFLAGS) -DBLOCK_SHARED_MEM_OPTIMIZATION=0
-NVCCFLAGS   = $(CFLAGS) --ptxas-options=-v -arch=sm_13
+NVCCFLAGS   = $(CFLAGS) --ptxas-options=-v
 LDFLAGS     = $(OPTFLAGS)
 LIBS        =
 

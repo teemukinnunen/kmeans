@@ -270,7 +270,7 @@ float** cuda_kmeans(float **objects,      /* in: [numObjs][numCoords] */
 
     printf("Occupancy founded optimal values: %d blocks and %d grid (min grid: %d)\n", blockSize, gridSize, minGridSize);
 
-    const unsigned int numThreadsPerClusterBlock = blockSize/2;
+    const unsigned int numThreadsPerClusterBlock = nextPowerOfTwo(blockSize/2)/2;
     const unsigned int numClusterBlocks =
         (numObjs + numThreadsPerClusterBlock - 1) / numThreadsPerClusterBlock;
 
@@ -290,12 +290,12 @@ float** cuda_kmeans(float **objects,      /* in: [numObjs][numCoords] */
             "See the README for details.\n");
     }
 #else
-    const unsigned int clusterBlockSharedDataSize = blockSize * 2;
-        numThreadsPerClusterBlock * sizeof(unsigned char);
+    const unsigned int clusterBlockSharedDataSize =
+    		numThreadsPerClusterBlock * sizeof(unsigned char);
 #endif
 
-    const unsigned int numReductionThreads = blockSize;
-        //nextPowerOfTwo(numClusterBlocks);
+    const unsigned int numReductionThreads =
+        nextPowerOfTwo(numClusterBlocks);
     const unsigned int reductionBlockSharedDataSize =
         numReductionThreads * sizeof(unsigned int);
 
@@ -314,21 +314,21 @@ float** cuda_kmeans(float **objects,      /* in: [numObjs][numCoords] */
         checkCuda(cudaMemcpy(deviceClusters, dimClusters[0],
                   numClusters*numCoords*sizeof(float), cudaMemcpyHostToDevice));
 
-        //printf("Launchning kernel: find_nearest_cluster<<<%d, %d, %d>>>\n", numClusterBlocks, numThreadsPerClusterBlock, clusterBlockSharedDataSize);
+        printf("Launchning kernel: find_nearest_cluster<<<%d, %d, %d>>>\n", numClusterBlocks, numThreadsPerClusterBlock, clusterBlockSharedDataSize);
         find_nearest_cluster
             <<< numClusterBlocks, numThreadsPerClusterBlock, clusterBlockSharedDataSize >>>
             (numCoords, numObjs, numClusters,
              deviceObjects, deviceClusters, deviceMembership, deviceIntermediates);
 
         cudaDeviceSynchronize(); checkLastCudaError();
-        //printf("\t No errors!\n");
+        printf("\t No errors!\n");
 
-        //printf("Launching compute_delta <<< %d, %d, %d>>>\n", 1, numReductionThreads, reductionBlockSharedDataSize);
+        printf("Launching compute_delta <<< %d, %d, %d>>>\n", 1, numReductionThreads, reductionBlockSharedDataSize);
         compute_delta <<< 1, numReductionThreads, reductionBlockSharedDataSize >>>
             (deviceIntermediates, numClusterBlocks, numReductionThreads);
 
         cudaDeviceSynchronize(); checkLastCudaError();
-        //printf("\tNo errors!\n");
+        printf("\tNo errors!\n");
 
 
         int d;
